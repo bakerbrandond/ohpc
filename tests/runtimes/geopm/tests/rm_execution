@@ -1,0 +1,27 @@
+#!./common/bats/bin/bats
+# -*-sh-*-
+
+load ./common/test_helper_functions || exit 1
+source ./common/functions || exit 1
+
+if [ -s ./common/TEST_ENV ];then
+    source ./common/TEST_ENV
+fi
+
+NODES=1
+TASKS=4
+
+@test "[libs/geopm] GEOPM Tutorial 4 ($rm/$LMOD_FAMILY_COMPILER/$LMOD_FAMILY_MPI)" {
+    if [ ! -s tutorial_4 ];then
+	flunk "tutorial_4 binary does not exist"
+    fi
+
+    run make tutorial_4
+    LD_DYNAMIC_WEAK=true \
+    GEOPM_PMPI_CTL=process \
+    GEOPM_REPORT=tutorial_4_balanced_report \
+    GEOPM_TRACE=tutorial_4_balanced_trace \
+    GEOPM_POLICY=tutorial_balanced_policy.json \
+    mpiexec -n $((TASKS + 1)) tutorial_4
+    assert_success
+}
